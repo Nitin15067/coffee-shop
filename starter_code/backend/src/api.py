@@ -26,7 +26,6 @@ def get_drinks():
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def add_drink(payload):
-    print("here")
     data = request.get_json()
     try:
         drink = Drink(
@@ -56,11 +55,10 @@ def drink_details(payload):
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
 def update_drink(payload, drink_id):
-    print(drink_id)
     drink = Drink.query.filter_by(id=drink_id).one_or_none()
 
     if drink is None:
-        abort(404)
+        abort(401)
     
     try:
         data = request.get_json()

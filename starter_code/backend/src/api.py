@@ -13,15 +13,17 @@ CORS(app)
 
 db_drop_and_create_all()
 
-## ROUTES
+
+# ROUTES
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
     drinks = Drink.query.all()
     formatted_drinks = [drink.short() for drink in drinks]
     return jsonify({
-        "success": True, 
+        "success": True,
         "drinks": formatted_drinks
     }), 200
+
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
@@ -38,7 +40,7 @@ def add_drink(payload):
             "success": True,
             "drinks": [formatted_drink]
         }), 200
-    except:
+    except Exception:
         abort(422)
 
 
@@ -48,9 +50,10 @@ def drink_details(payload):
     drinks = Drink.query.all()
     formatted_drinks = [drink.long() for drink in drinks]
     return jsonify({
-        "success": True, 
+        "success": True,
         "drinks": formatted_drinks
     }), 200
+
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
@@ -59,7 +62,7 @@ def update_drink(payload, drink_id):
 
     if drink is None:
         abort(401)
-    
+
     try:
         data = request.get_json()
         drink.recipe = json.dumps(data.get('recipe', None))
@@ -71,7 +74,7 @@ def update_drink(payload, drink_id):
             "drinks": [formatted_drink]
         }), 200
 
-    except:
+    except Exception:
         abort(422)
 
 
@@ -85,21 +88,22 @@ def delete_drink(payload, drink_id):
 
     try:
         drink.delete()
-        
+
         formatted_drink = drink.long()
         return jsonify({
             "success": True,
             "drinks": [formatted_drink]
         }), 200
 
-    except:
+    except Exception:
         abort(422)
 
-## Error Handling
+
+# Error Handling
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False, 
+        "success": False,
         "error": 422,
         "message": "unprocessable"
     }), 422
@@ -140,6 +144,7 @@ def bad_request(error):
         'message': 'bad request'
     }), 400
 
+
 @app.errorhandler(401)
 def auth_error(error):
     return jsonify({
@@ -156,3 +161,12 @@ def forbidden(error):
         'error': 403,
         'message': 'Forbidden'
     }), 403
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    return jsonify({
+        'success': False,
+        'error': ex.status_code,
+        'message': ex.error
+    }), ex.status_code
